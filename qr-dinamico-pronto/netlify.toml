@@ -1,6 +1,6 @@
 [build]
   publish = "public"
-  functions = "qr-dinamico-pronto/netlify/functions"
+  functions = "netlify/functions"
   command = "npm install"
 
 [[redirects]]
