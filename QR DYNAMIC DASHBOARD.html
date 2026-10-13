@@ -854,7 +854,23 @@ function Logo() {
 function effectiveTheme() { const t = document.documentElement.getAttribute('data-theme'); return t || (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'); }
 function App() {
   const [route, setRoute] = useState({ page: 'home' });
-  const [qrs, setQrs] = useState(seedData);
+  const [qrs, setQrs] = useState(() => {
+  try {
+    const dados = localStorage.getItem('meus-qr-codes');
+    return dados ? JSON.parse(dados) : [];
+  } catch (erro) {
+    console.error('Erro ao carregar QR Codes:', erro);
+    return [];
+  }
+});
+
+useEffect(() => {
+  try {
+    localStorage.setItem('meus-qr-codes', JSON.stringify(qrs));
+  } catch (erro) {
+    console.error('Erro ao salvar QR Codes:', erro);
+  }
+}, [qrs]);
   const [msg, setMsg] = useState('');
   const [dl, setDl] = useState(null);
   const [theme, setTheme] = useState(effectiveTheme);
