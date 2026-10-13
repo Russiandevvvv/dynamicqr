@@ -1,0 +1,23 @@
+VERSÃO ADAPTADA PARA NETLIFY + NEON
+
+Atualize no GitHub a pasta qr-dinamico-pronto, preservando public/index.html.
+Adicione netlify.toml e a pasta netlify/functions/qr.js.
+Substitua package.json pelo novo.
+server.js é legado para hospedagem Node tradicional e NÃO é usado no Netlify.
+
+Netlify com Base directory: qr-dinamico-pronto
+Build command: npm install (também configurado em netlify.toml)
+Publish directory: public
+Functions directory: netlify/functions (NÃO qr-dinamico-pronto/netlify/functions)
+
+Variáveis no Netlify:
+DATABASE_URL: URL de conexão PostgreSQL do Neon, completa, incluindo senha, somente no Netlify.
+ADMIN_PASSWORD: senha forte, secreta.
+PUBLIC_BASE_URL: opcional, endereço definitivo do site, por exemplo https://meu-site.netlify.app
+
+Após deploy, abra a URL do site. O painel é público visualmente, mas os endpoints de gerenciamento exigem senha Basic. Para um produto comercial, implemente login com autenticação robusta antes de compartilhar o painel. O redirect /r/CODIGO é público.
+O Netlify Free possui limites, não garante disponibilidade permanente e pode pausar o site ao esgotar créditos.
+QR dinâmico funciona apenas para URLs nesta versão; PIX e outros são estáticos.
+Não imprima QR sem antes salvar e testar o redirecionamento real.
+Dados de QR criados anteriormente em localStorage não são importados automaticamente.
+Indicadores estatísticos do dashboard são demonstrativos e não representam visitas reais.

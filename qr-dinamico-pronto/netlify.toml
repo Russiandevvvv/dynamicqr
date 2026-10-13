@@ -1,0 +1,28 @@
+[build]
+  publish = "public"
+  functions = "netlify/functions"
+  command = "npm install"
+
+[[redirects]]
+  from = "/r/:code"
+  to = "/.netlify/functions/qr?kind=redirect&code=:code"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/config"
+  to = "/.netlify/functions/qr?kind=config"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/qrs/:code"
+  to = "/.netlify/functions/qr?kind=qr&code=:code"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/qrs"
+  to = "/.netlify/functions/qr?kind=qrs"
+  status = 200
+  force = true

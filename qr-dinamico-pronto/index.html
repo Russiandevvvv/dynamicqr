@@ -1,0 +1,904 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Pontilha</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Hanken+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<script src="https://cdn.tailwindcss.com/3.4.17"></script>
+<script>
+  tailwind.config = { corePlugins: { preflight: true } };
+</script>
+<style>
+  /* Layout: sidebar fixa (desktop) / barra inferior (celular); conteúdo em coluna única que vira 2 colunas por seção.
+     Paleta: cinza-azulado de papel, tinta azul-petróleo escura, acento ultramarino; verde/âmbar/vermelho só para estado. */
+  :root {
+    --bg: #F2F5F8; --surface: #FFFFFF; --surface2: #F6F8FB; --ink: #10202C; --muted: #566676; --faint: #7B8B99;
+    --line: #DCE3EA; --grid: #E7ECF1; --accent: #3447D4; --accent-ink: #FFFFFF; --accent-soft: #E8EBFC;
+    --good: #12804A; --good-soft: #E1F3EA; --warn: #8F5E00; --warn-soft: #FBEFD3; --crit: #C23A2B; --crit-soft: #FBE4E0;
+    --shadow: 0 1px 2px rgba(16,32,44,.05), 0 6px 20px rgba(16,32,44,.05);
+    --f-display: 'Bricolage Grotesque', system-ui, sans-serif;
+    --f-body: 'Hanken Grotesk', system-ui, sans-serif;
+    --f-mono: 'IBM Plex Mono', ui-monospace, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0C1318; --surface: #131C23; --surface2: #18232B; --ink: #E7EEF3; --muted: #9FB0BE; --faint: #7D8F9E;
+      --line: #243340; --grid: #1D2A34; --accent: #8C9BFF; --accent-ink: #0C1318; --accent-soft: #1D2547;
+      --good: #4CCB8C; --good-soft: #123324; --warn: #E5B245; --warn-soft: #3A2D10; --crit: #F0806F; --crit-soft: #401C17;
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 6px 20px rgba(0,0,0,.25);
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0C1318; --surface: #131C23; --surface2: #18232B; --ink: #E7EEF3; --muted: #9FB0BE; --faint: #7D8F9E;
+    --line: #243340; --grid: #1D2A34; --accent: #8C9BFF; --accent-ink: #0C1318; --accent-soft: #1D2547;
+    --good: #4CCB8C; --good-soft: #123324; --warn: #E5B245; --warn-soft: #3A2D10; --crit: #F0806F; --crit-soft: #401C17;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 6px 20px rgba(0,0,0,.25);
+    color-scheme: dark;
+  }
+  body { background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 14px; line-height: 1.5; }
+  h1, h2, h3 { font-family: var(--f-display); font-weight: 700; letter-spacing: -0.01em; text-wrap: balance; margin: 0; }
+  button { font-family: inherit; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+
+  .shell { display: flex; min-height: 100vh; }
+  .side { width: 244px; flex: none; position: sticky; top: 0; height: 100vh; padding: 24px 16px; display: none; flex-direction: column; gap: 24px; border-right: 1px solid var(--line); background: var(--surface); }
+  @media (min-width: 1024px) { .side { display: flex; } .bottomnav { display: none !important; } }
+  .main { flex: 1; min-width: 0; width: 100%; max-width: 1200px; margin: 0 auto; padding: 20px 16px 104px; }
+  @media (min-width: 1024px) { .main { padding: 32px 36px 56px; } }
+  .bottomnav { position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; display: flex; justify-content: space-around; gap: 4px; padding: 8px 12px calc(8px + env(safe-area-inset-bottom, 0px)); background: var(--surface); border-top: 1px solid var(--line); }
+
+  .brand { display: flex; align-items: center; gap: 10px; font-family: var(--f-display); font-weight: 700; font-size: 20px; letter-spacing: -0.02em; }
+  .navbtn { display: flex; align-items: center; gap: 10px; width: 100%; height: 40px; padding: 0 12px; border: 0; border-radius: 10px; background: transparent; color: var(--muted); font: 600 14px var(--f-body); cursor: pointer; text-align: left; transition: background .15s, color .15s; }
+  .navbtn:hover { background: var(--surface2); color: var(--ink); }
+  .navbtn[aria-current="page"] { background: var(--accent-soft); color: var(--accent); }
+  .bottomnav .navbtn { flex-direction: column; gap: 2px; height: 52px; justify-content: center; font-size: 11.5px; padding: 0 6px; text-align: center; }
+
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow); }
+  .pad { padding: 20px; }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 38px; padding: 0 14px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font: 600 13.5px var(--f-body); cursor: pointer; white-space: nowrap; transition: background .15s, border-color .15s; }
+  .btn:hover:not(:disabled) { background: var(--surface2); border-color: var(--faint); }
+  .btn:disabled { opacity: .5; cursor: not-allowed; }
+  .btn-primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+  .btn-primary:hover:not(:disabled) { background: var(--accent); border-color: var(--accent); filter: brightness(1.08); }
+  .btn-danger { color: var(--crit); }
+  .btn-sm { height: 32px; padding: 0 10px; font-size: 12.5px; }
+  .iconbtn { display: inline-grid; place-items: center; width: 34px; height: 34px; border-radius: 9px; border: 1px solid transparent; background: transparent; color: var(--muted); cursor: pointer; transition: background .15s, color .15s; }
+  .iconbtn:hover { background: var(--surface2); color: var(--ink); border-color: var(--line); }
+
+  .inp { width: 100%; height: 40px; padding: 0 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font: 400 14px var(--f-body); }
+  textarea.inp { height: auto; min-height: 92px; padding: 10px 12px; resize: vertical; }
+  .inp::placeholder { color: var(--faint); }
+  .inp.mono, .mono { font-family: var(--f-mono); font-size: 13px; }
+  .lbl { display: block; margin-bottom: 6px; font-size: 12.5px; font-weight: 600; color: var(--muted); }
+  .hint { margin-top: 6px; font-size: 12.5px; color: var(--muted); }
+  .eyebrow { font-size: 11.5px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+
+  .pill { display: inline-flex; align-items: center; gap: 6px; height: 24px; padding: 0 9px; border-radius: 999px; font-size: 12px; font-weight: 600; background: var(--surface2); color: var(--muted); border: 1px solid var(--line); white-space: nowrap; }
+  .pill.good { background: var(--good-soft); color: var(--good); border-color: transparent; }
+  .pill.off { background: var(--surface2); color: var(--muted); }
+  .pill.warn { background: var(--warn-soft); color: var(--warn); border-color: transparent; }
+  .pill.accent { background: var(--accent-soft); color: var(--accent); border-color: transparent; }
+  .dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+
+  .seg { display: inline-flex; padding: 3px; gap: 2px; border-radius: 11px; background: var(--surface2); border: 1px solid var(--line); max-width: 100%; overflow-x: auto; }
+  .seg button { height: 32px; padding: 0 12px; border: 0; border-radius: 8px; background: transparent; color: var(--muted); font: 600 13px var(--f-body); cursor: pointer; white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; }
+  .seg button[aria-selected="true"], .seg button[aria-pressed="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 2px rgba(16,32,44,.12); }
+
+  .typegrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(124px, 1fr)); gap: 8px; }
+  .typebtn { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-radius: 11px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font: 600 13px var(--f-body); cursor: pointer; text-align: left; }
+  .typebtn:hover { border-color: var(--faint); }
+  .typebtn[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
+  .opt { display: grid; place-items: center; gap: 4px; padding: 10px 6px 8px; min-width: 74px; border-radius: 11px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font: 600 12px var(--f-body); cursor: pointer; }
+  .opt[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
+  .swatch { width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--surface); box-shadow: 0 0 0 1px var(--line); cursor: pointer; padding: 0; }
+  .swatch[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--accent); }
+  .colorbox { display: flex; align-items: center; gap: 8px; }
+  .colorbox input[type="color"] { width: 40px; height: 40px; padding: 2px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); cursor: pointer; flex: none; }
+
+  .qrwrap { width: 100%; }
+  .qrwrap svg { display: block; width: 100%; height: auto; }
+  .thumb { flex: none; border-radius: 8px; overflow: hidden; border: 1px solid var(--line); background: #fff; display: grid; place-items: center; }
+  .thumb svg { width: 100%; height: 100%; display: block; }
+
+  .qrrow { display: grid; grid-template-columns: 56px minmax(0, 1fr); gap: 6px 14px; align-items: center; padding: 14px 16px; border-top: 1px solid var(--line); }
+  .qrrow:first-child { border-top: 0; }
+  .qrrow .cell { grid-column: 2; display: flex; align-items: center; gap: 8px; min-width: 0; }
+  .qrrow .cell[data-label]::before { content: attr(data-label); font-size: 11.5px; color: var(--faint); min-width: 64px; }
+  .qrrow .thumbcell { grid-row: span 3; }
+  @media (min-width: 900px) {
+    .qrrow { grid-template-columns: 56px minmax(0, 1fr) 150px 96px 120px 138px; gap: 16px; padding: 12px 16px; }
+    .qrrow .cell { grid-column: auto; }
+    .qrrow .cell[data-label]::before { display: none; }
+    .qrrow .thumbcell { grid-row: auto; }
+    .qrhead { display: grid; grid-template-columns: 56px minmax(0, 1fr) 150px 96px 120px 138px; gap: 16px; padding: 10px 16px; border-bottom: 1px solid var(--line); }
+  }
+  .qrhead { display: none; }
+  @media (min-width: 900px) { .qrhead { display: grid; } }
+  .qrname { font-weight: 700; font-size: 14.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  .switch { position: relative; width: 38px; height: 22px; border-radius: 999px; border: 0; background: var(--line); cursor: pointer; padding: 0; transition: background .15s; flex: none; }
+  .switch::after { content: ''; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: transform .15s; box-shadow: 0 1px 2px rgba(0,0,0,.3); }
+  .switch[aria-checked="true"] { background: var(--good); }
+  .switch[aria-checked="true"]::after { transform: translateX(16px); }
+
+  .bar { height: 8px; border-radius: 4px; background: var(--grid); overflow: hidden; }
+  .bar > i { display: block; height: 100%; border-radius: 4px; background: var(--accent); }
+  .tip { position: absolute; z-index: 5; pointer-events: none; padding: 7px 10px; border-radius: 9px; background: var(--ink); color: var(--bg); font-size: 12.5px; line-height: 1.35; white-space: nowrap; box-shadow: 0 6px 18px rgba(0,0,0,.25); }
+  .toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(84px + env(safe-area-inset-bottom, 0px)); z-index: 60; max-width: calc(100% - 32px); padding: 10px 16px; border-radius: 11px; background: var(--ink); color: var(--bg); font-weight: 600; font-size: 13.5px; box-shadow: 0 10px 30px rgba(0,0,0,.3); }
+  @media (min-width: 1024px) { .toast { bottom: 28px; } }
+  .banner { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border-radius: 10px; background: var(--warn-soft); color: var(--warn); font-size: 13px; font-weight: 500; }
+  .banner.info { background: var(--accent-soft); color: var(--accent); }
+  table.t { width: 100%; border-collapse: collapse; font-size: 13px; font-variant-numeric: tabular-nums; }
+  table.t th, table.t td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); }
+  .num { font-variant-numeric: tabular-nums; }
+</style>
+
+<div id="root"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/htm@3.1.1/dist/htm.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lucide-react@0.468.0/dist/umd/lucide-react.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+<script>
+(function () {
+'use strict';
+const { useState, useMemo, useEffect, useRef, useContext, createContext } = React;
+const html = htm.bind(React.createElement);
+const L = window.lucideReact || {};
+let DOMAIN = location.origin;
+const serverApi = async (url, opts) => { const r = await fetch(url, { ...opts, headers: { 'Content-Type': 'application/json', ...(opts && opts.headers || {}) } }); if (!r.ok) { let m='Erro '+r.status; try { m=(await r.json()).error||m; } catch(e) {} throw new Error(m); } return r.status === 204 ? null : r.json(); };
+const DAY = 864e5;
+const cx = (...a) => a.filter(Boolean).join(' ');
+const fmt = n => Number(n || 0).toLocaleString('pt-BR');
+
+/* ---------- ícones ---------- */
+function Icon({ n, size = 18, sw = 1.75, className }) {
+  const C = L[n];
+  if (!C) return html`<span className=${className} style=${{ display: 'inline-block', width: size, height: size }} aria-hidden="true"></span>`;
+  return html`<${C} size=${size} strokeWidth=${sw} className=${className} aria-hidden="true" />`;
+}
+
+/* ---------- utilidades ---------- */
+function mulberry32(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+function hashStr(s) { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
+function newCode() { const a = 'abcdefghjkmnpqrstuvwxyz23456789'; let s = ''; for (let i = 0; i < 6; i++) s += a[Math.floor(Math.random() * a.length)]; return s; }
+const slug = s => (s || 'qr-code').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'qr-code';
+const isHex = s => /^#[0-9a-f]{6}$/i.test(s);
+function lum(hex) { const c = hex.replace('#', ''); const v = [0, 2, 4].map(i => parseInt(c.substr(i, 2), 16) / 255).map(x => x <= 0.03928 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4)); return 0.2126 * v[0] + 0.7152 * v[1] + 0.0722 * v[2]; }
+function ratio(a, b) { const x = lum(a), y = lum(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); }
+const contrastOn = hex => (lum(hex) > 0.4 ? '#10202C' : '#FFFFFF');
+function relTime(ts) {
+  const d = Math.floor((Date.now() - ts) / DAY);
+  if (d <= 0) { const h = Math.floor((Date.now() - ts) / 36e5); return h <= 0 ? 'agora há pouco' : 'há ' + h + (h === 1 ? ' hora' : ' horas'); }
+  if (d === 1) return 'ontem';
+  if (d < 30) return 'há ' + d + ' dias';
+  const m = Math.floor(d / 30); return 'há ' + m + (m === 1 ? ' mês' : ' meses');
+}
+
+/* ---------- conteúdo por tipo ---------- */
+const TYPES = {
+  url:   { label: 'URL dinâmica', short: 'URL', icon: 'Link2' },
+  text:  { label: 'Texto simples', short: 'Texto', icon: 'Type' },
+  vcard: { label: 'Cartão de visita', short: 'vCard', icon: 'User' },
+  wifi:  { label: 'Wi-Fi', short: 'Wi-Fi', icon: 'Wifi' },
+  email: { label: 'E-mail', short: 'E-mail', icon: 'Mail' },
+  sms:   { label: 'SMS', short: 'SMS', icon: 'MessageSquare' },
+  pix:   { label: 'PIX', short: 'PIX', icon: 'Landmark' }
+};
+const emptyData = () => ({
+  url: { url: '' }, text: { text: '' },
+  vcard: { first: '', last: '', org: '', title: '', phone: '', email: '', site: '' },
+  wifi: { ssid: '', pass: '', enc: 'WPA' }, email: { to: '', subject: '', body: '' },
+  sms: { phone: '', msg: '' }, pix: { key: '', name: '', city: '', amount: '', txid: '' }
+});
+const defaultMode = t => t === 'url' ? 'dynamic' : 'static';
+const normUrl = u => { u = (u || '').trim(); return u && !/^https?:\/\//i.test(u) ? 'https://' + u : u; };
+function wesc(s) { return String(s || '').replace(/([\\;,:"])/g, '\\$1'); }
+function tlv(id, v) { return id + String(v.length).padStart(2, '0') + v; }
+function crc16(s) { let c = 0xFFFF; for (let i = 0; i < s.length; i++) { c ^= s.charCodeAt(i) << 8; for (let j = 0; j < 8; j++) c = (c & 0x8000) ? ((c << 1) ^ 0x1021) : (c << 1); c &= 0xFFFF; } return c.toString(16).toUpperCase().padStart(4, '0'); }
+function stripTxt(s, n) { return String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^\x20-\x7E]/g, '').toUpperCase().slice(0, n); }
+function pixPayload(d) {
+  const mai = tlv('00', 'br.gov.bcb.pix') + tlv('01', (d.key || '').trim());
+  let p = tlv('00', '01') + tlv('26', mai) + tlv('52', '0000') + tlv('53', '986');
+  const amt = parseFloat(String(d.amount || '').replace(',', '.'));
+  if (amt > 0) p += tlv('54', amt.toFixed(2));
+  const tx = String(d.txid || '').replace(/[^A-Za-z0-9]/g, '').slice(0, 25) || '***';
+  p += tlv('58', 'BR') + tlv('59', stripTxt(d.name, 25) || 'RECEBEDOR') + tlv('60', stripTxt(d.city, 15) || 'SAO PAULO') + tlv('62', tlv('05', tx));
+  p += '6304';
+  return p + crc16(p);
+}
+function payloadOf(type, d) {
+  switch (type) {
+    case 'url': return normUrl(d.url);
+    case 'text': return d.text || '';
+    case 'wifi': return 'WIFI:T:' + (d.enc === 'nopass' ? 'nopass' : d.enc) + ';S:' + wesc(d.ssid) + ';' + (d.enc === 'nopass' ? '' : 'P:' + wesc(d.pass) + ';') + ';';
+    case 'vcard': return ['BEGIN:VCARD', 'VERSION:3.0', 'N:' + (d.last || '') + ';' + (d.first || '') + ';;;', 'FN:' + ((d.first || '') + ' ' + (d.last || '')).trim(),
+      d.org ? 'ORG:' + d.org : '', d.title ? 'TITLE:' + d.title : '', d.phone ? 'TEL;TYPE=CELL:' + d.phone : '', d.email ? 'EMAIL:' + d.email : '', d.site ? 'URL:' + normUrl(d.site) : '', 'END:VCARD'].filter(Boolean).join('\r\n');
+    case 'email': return 'mailto:' + (d.to || '') + '?subject=' + encodeURIComponent(d.subject || '') + '&body=' + encodeURIComponent(d.body || '');
+    case 'sms': return 'SMSTO:' + (d.phone || '') + ':' + (d.msg || '');
+    case 'pix': return pixPayload(d);
+  }
+  return '';
+}
+function validate(type, d) {
+  switch (type) {
+    case 'url': { try { const u = new URL(normUrl(d.url)); return /^https?:$/.test(u.protocol) && u.hostname.includes('.') ? '' : 'Informe um endereço válido, como exemplo.com.br/oferta'; } catch (e) { return 'Informe um endereço válido, como exemplo.com.br/oferta'; } }
+    case 'text': return (d.text || '').trim() ? '' : 'Escreva o texto que será exibido ao escanear.';
+    case 'wifi': return !(d.ssid || '').trim() ? 'Informe o nome da rede (SSID).' : (d.enc !== 'nopass' && !(d.pass || '').trim()) ? 'Informe a senha da rede.' : '';
+    case 'vcard': return ((d.first || '').trim() || (d.last || '').trim()) ? '' : 'Informe pelo menos o nome do contato.';
+    case 'email': return /.+@.+\..+/.test(d.to || '') ? '' : 'Informe um e-mail de destino válido.';
+    case 'sms': return (d.phone || '').replace(/\D/g, '').length >= 8 ? '' : 'Informe o número com DDD.';
+    case 'pix': return !(d.key || '').trim() ? 'Informe a chave PIX.' : !(d.name || '').trim() ? 'Informe o nome do recebedor.' : '';
+  }
+  return '';
+}
+function destText(q) {
+  const d = q.data;
+  switch (q.type) {
+    case 'url': return normUrl(d.url).replace(/^https?:\/\//, '');
+    case 'text': return (d.text || '').slice(0, 60);
+    case 'wifi': return 'Rede ' + d.ssid;
+    case 'vcard': return ((d.first || '') + ' ' + (d.last || '')).trim();
+    case 'email': return d.to;
+    case 'sms': return d.phone;
+    case 'pix': return 'Chave ' + d.key;
+  }
+  return '';
+}
+const shortUrl = code => DOMAIN + '/r/' + code;
+const curData = q => q.datas ? q.datas[q.type] : q.data;
+const encodedOf = q => q.mode === 'dynamic' && q.type === 'url' ? shortUrl(q.code) : payloadOf(q.type, curData(q)) || '';
+/* ---------- geração do QR ---------- */
+qrcode.stringToBytes = s => Array.from(new TextEncoder().encode(s));
+function getMatrix(text, ecl) {
+  try {
+    const q = qrcode(0, ecl); q.addData(text || ' '); q.make();
+    const n = q.getModuleCount(); const m = [];
+    for (let r = 0; r < n; r++) { const row = []; for (let c = 0; c < n; c++) row.push(q.isDark(r, c)); m.push(row); }
+    return m;
+  } catch (e) { return null; }
+}
+const ICONS = {
+  star: ['M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z'],
+  heart: ['M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z'],
+  wifi: ['M5 12.55a11 11 0 0 1 14.08 0', 'M1.42 9a16 16 0 0 1 21.16 0', 'M8.53 16.11a6 6 0 0 1 6.95 0', 'M12 20h.01'],
+  link: ['M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71', 'M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71'],
+  phone: ['M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z'],
+  mail: ['M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z', 'M22 6l-10 7L2 6'],
+  coffee: ['M17 8h1a4 4 0 1 1 0 8h-1', 'M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V8z', 'M6 2v2', 'M10 2v2', 'M14 2v2'],
+  pin: ['M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z', 'M12 13a3 3 0 1 0 0-6 3 3 0 0 0 0 6z']
+};
+const ICON_LABELS = { star: 'Estrela', heart: 'Coração', wifi: 'Wi-Fi', link: 'Link', phone: 'Telefone', mail: 'E-mail', coffee: 'Café', pin: 'Local' };
+function rr(x, y, w, h, r) {
+  r = Math.min(r, w / 2, h / 2);
+  if (r <= 0) return 'M' + x + ' ' + y + 'h' + w + 'v' + h + 'h' + (-w) + 'z';
+  return 'M' + (x + r) + ' ' + y + 'H' + (x + w - r) + 'A' + r + ' ' + r + ' 0 0 1 ' + (x + w) + ' ' + (y + r) + 'V' + (y + h - r) + 'A' + r + ' ' + r + ' 0 0 1 ' + (x + w - r) + ' ' + (y + h) + 'H' + (x + r) + 'A' + r + ' ' + r + ' 0 0 1 ' + x + ' ' + (y + h - r) + 'V' + (y + r) + 'A' + r + ' ' + r + ' 0 0 1 ' + (x + r) + ' ' + y + 'Z';
+}
+const EYE_R = { square: [0, 0, 0], rounded: [2, 1.2, 0.9], circle: [3.5, 2.5, 1.5] };
+let uid = 0;
+function buildSvg(m, st, px) {
+  const n = m.length, Q = 2, qb = n + Q * 2;
+  const fr = st.frame && st.frame.on && (st.frame.text || '').trim();
+  const pad = fr ? 1.6 : 0, W = qb + pad * 2, band = fr ? 6.2 : 0, H = qb + pad * 2 + band;
+  const ox = pad + Q, oy = pad + Q, id = 'c' + (++uid);
+  const eyeC = st.eye || st.fg, hasLogo = st.logo && st.logo.kind !== 'none';
+  const LS = hasLogo ? Math.max(5, Math.round(n * 0.2)) : 0, mid = n / 2, half = LS / 2 + 0.6;
+  let s = '';
+  if (fr) s += '<rect width="' + W + '" height="' + H + '" rx="3" fill="' + st.frame.color + '"/>';
+  s += '<rect x="' + pad + '" y="' + pad + '" width="' + qb + '" height="' + qb + '" rx="' + (fr ? 1.6 : 0) + '" fill="' + st.bg + '"/>';
+  let d = '';
+  for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) {
+    if (!m[r][c]) continue;
+    if ((r < 7 && c < 7) || (r < 7 && c >= n - 7) || (r >= n - 7 && c < 7)) continue;
+    if (hasLogo && Math.abs(c + 0.5 - mid) < half && Math.abs(r + 0.5 - mid) < half) continue;
+    const x = ox + c, y = oy + r;
+    if (st.dot === 'dots') { const rad = 0.43; d += 'M' + (x + 0.5 - rad) + ' ' + (y + 0.5) + 'a' + rad + ' ' + rad + ' 0 1 0 ' + (rad * 2) + ' 0a' + rad + ' ' + rad + ' 0 1 0 ' + (-rad * 2) + ' 0z'; }
+    else if (st.dot === 'rounded') d += rr(x + 0.04, y + 0.04, 0.92, 0.92, 0.32);
+    else d += 'M' + x + ' ' + y + 'h1v1h-1z';
+  }
+  s += '<path d="' + d + '" fill="' + st.fg + '"' + (st.dot === 'square' ? ' shape-rendering="crispEdges"' : '') + '/>';
+  const rad = EYE_R[st.eyeShape] || EYE_R.square;
+  [[0, 0], [n - 7, 0], [0, n - 7]].forEach(p => {
+    const x = ox + p[0], y = oy + p[1];
+    s += '<path fill-rule="evenodd" fill="' + eyeC + '" d="' + rr(x, y, 7, 7, rad[0]) + rr(x + 1, y + 1, 5, 5, rad[1]) + '"/>';
+    s += '<path fill="' + eyeC + '" d="' + rr(x + 2, y + 2, 3, 3, rad[2]) + '"/>';
+  });
+  if (hasLogo) {
+    const lx = ox + mid - LS / 2, ly = oy + mid - LS / 2;
+    s += '<rect x="' + lx + '" y="' + ly + '" width="' + LS + '" height="' + LS + '" rx="' + LS * 0.22 + '" fill="' + st.bg + '"/>';
+    if (st.logo.kind === 'icon' && ICONS[st.logo.icon]) {
+      const k = (LS * 0.6) / 24, tx = lx + LS / 2 - 12 * k, ty = ly + LS / 2 - 12 * k;
+      s += '<g transform="translate(' + tx + ' ' + ty + ') scale(' + k + ')" fill="none" stroke="' + st.fg + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + ICONS[st.logo.icon].map(p => '<path d="' + p + '"/>').join('') + '</g>';
+    } else if (st.logo.kind === 'image' && st.logo.src) {
+      const pd = LS * 0.1;
+      s += '<clipPath id="' + id + '"><rect x="' + (lx + pd) + '" y="' + (ly + pd) + '" width="' + (LS - pd * 2) + '" height="' + (LS - pd * 2) + '" rx="' + LS * 0.16 + '"/></clipPath>';
+      s += '<image href="' + st.logo.src + '" x="' + (lx + pd) + '" y="' + (ly + pd) + '" width="' + (LS - pd * 2) + '" height="' + (LS - pd * 2) + '" preserveAspectRatio="xMidYMid slice" clip-path="url(#' + id + ')"/>';
+    }
+  }
+  if (fr) {
+    const txt = st.frame.text.trim(), fs = Math.min(2.8, (W - 4) / (txt.length * 0.62));
+    const cy = pad + qb + (H - pad - qb) / 2;
+    s += '<text x="' + W / 2 + '" y="' + (cy + fs * 0.35) + '" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-weight="700" font-size="' + fs + '" fill="' + contrastOn(st.frame.color) + '">' + txt.replace(/&/g, '&amp;').replace(/</g, '&lt;') + '</text>';
+  }
+  const size = px ? ' width="' + px + '" height="' + Math.round(px * H / W) + '"' : '';
+  return { svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + W + ' ' + H + '"' + size + '>' + s + '</svg>', vw: W, vh: H };
+}
+
+/* ---------- exportação ---------- */
+function svgToCanvas(svg, w, h, fill) {
+  return new Promise((res, rej) => {
+    const img = new Image();
+    img.onload = () => { const c = document.createElement('canvas'); c.width = w; c.height = h; const x = c.getContext('2d'); if (fill) { x.fillStyle = fill; x.fillRect(0, 0, w, h); } x.drawImage(img, 0, 0, w, h); res(c); };
+    img.onerror = () => rej(new Error('render'));
+    img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+  });
+}
+const toBlob = (c, type, q) => new Promise(res => c.toBlob(res, type, q));
+async function makeFile(fmtId, qr) {
+  const ecl = qr.style.logo.kind !== 'none' ? 'H' : 'M';
+  const m = getMatrix(encodedOf(qr), ecl);
+  if (!m) throw new Error('long');
+  const base = slug(qr.name);
+  const out = buildSvg(m, qr.style);
+  const PX = 2048, pw = PX, ph = Math.round(PX * out.vh / out.vw);
+  if (fmtId === 'svg') return { name: base + '.svg', blob: new Blob([out.svg], { type: 'image/svg+xml' }) };
+  const sized = buildSvg(m, qr.style, PX);
+  if (fmtId === 'png') { const c = await svgToCanvas(sized.svg, pw, ph); return { name: base + '.png', blob: await toBlob(c, 'image/png') }; }
+  if (fmtId === 'jpg') { const c = await svgToCanvas(sized.svg, pw, ph, '#FFFFFF'); return { name: base + '.jpg', blob: await toBlob(c, 'image/jpeg', 0.95) }; }
+  const c = await svgToCanvas(sized.svg, 1600, Math.round(1600 * out.vh / out.vw), '#FFFFFF');
+  const doc = new window.jspdf.jsPDF({ unit: 'mm', format: 'a4' });
+  const w = 120, h = w * out.vh / out.vw;
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(20); doc.text(qr.name || 'QR Code', 105, 32, { align: 'center' });
+  doc.addImage(c.toDataURL('image/png'), 'PNG', 45, 46, w, h);
+  doc.setFont('courier', 'normal'); doc.setFontSize(11); doc.setTextColor(90);
+  doc.text(qr.mode === 'dynamic' ? shortUrl(qr.code) : 'QR Code estático', 105, 46 + h + 14, { align: 'center' });
+  return { name: base + '.pdf', blob: doc.output('blob') };
+}
+
+/* ---------- dados de exemplo ---------- */
+const BASE_STYLE = { fg: '#10202C', bg: '#FFFFFF', eye: '#10202C', dot: 'square', eyeShape: 'square', logo: { kind: 'none', icon: 'star', src: null }, frame: { on: false, text: 'Escaneie-me', color: '#10202C' } };
+const mkStyle = (o = {}) => ({ ...BASE_STYLE, ...o, logo: { ...BASE_STYLE.logo, ...(o.logo || {}) }, frame: { ...BASE_STYLE.frame, ...(o.frame || {}) } });
+function genScans(id, rate, age) {
+  const r = mulberry32(hashStr(id)), ph = hashStr(id) % 7, out = [];
+  for (let i = 0; i < 30; i++) {
+    const ago = 29 - i;
+    if (ago > age) { out.push(0); continue; }
+    const dow = new Date(Date.now() - ago * DAY).getDay();
+    out.push(Math.max(0, Math.round(rate * ((dow === 0 || dow === 6) ? 0.7 : 1.05) * (1 + 0.3 * Math.sin(i / 3.1 + ph)) * (0.7 + r() * 0.6))));
+  }
+  return out;
+}
+function seedData() {
+  const mk = (code, name, type, mode, data, style, active, age, rate, older, hist) => {
+    const scans30 = mode === 'static' ? Array(30).fill(0) : genScans(code, rate, age);
+    const sum = scans30.reduce((a, b) => a + b, 0);
+    return { id: 'q' + code, code, name, type, mode, data, style: mkStyle(style), active, createdAt: Date.now() - age * DAY, scans30, totalScans: mode === 'static' ? 0 : sum + (age > 30 ? older : 0), history: hist.map(h => ({ at: Date.now() - h[0] * DAY, text: h[1] })) };
+  };
+  return [
+    mk('k7m2xa', 'Cardápio digital', 'url', 'dynamic', { url: 'https://exemplo.com.br/cardapio' }, { dot: 'rounded', eyeShape: 'rounded', frame: { on: true, text: 'Escaneie o cardápio', color: '#10202C' }, logo: { kind: 'icon', icon: 'coffee' } }, true, 140, 52, 5400, [[140, 'QR Code criado'], [22, 'Destino alterado para exemplo.com.br/cardapio']]),
+    mk('w3hn9d', 'Wi-Fi do salão', 'wifi', 'static', { ssid: 'Salao_Convidados', pass: 'bemvindo2026', enc: 'WPA' }, { fg: '#3447D4', eye: '#3447D4', dot: 'dots', eyeShape: 'circle', frame: { on: true, text: 'Wi-Fi Grátis', color: '#3447D4' } }, true, 96, 0, 0, [[96, 'QR Code criado']]),
+    mk('p5ce8t', 'Cartão de visita, Marina Duarte', 'vcard', 'dynamic', { first: 'Marina', last: 'Duarte', org: 'Duarte Arquitetura', title: 'Arquiteta', phone: '+55 32 99999-0000', email: 'marina@exemplo.com.br', site: 'exemplo.com.br' }, { dot: 'rounded', eyeShape: 'rounded', logo: { kind: 'icon', icon: 'pin' } }, true, 61, 11, 480, [[61, 'QR Code criado']]),
+    mk('r2uq6y', 'Promoção de outubro', 'url', 'dynamic', { url: 'https://exemplo.com.br/promo-outubro' }, { fg: '#3447D4', eye: '#10202C', dot: 'dots', eyeShape: 'rounded', frame: { on: true, text: 'Aproveite', color: '#3447D4' } }, true, 18, 74, 0, [[18, 'QR Code criado'], [6, 'Destino alterado para exemplo.com.br/promo-outubro']]),
+    mk('d8vj4b', 'Doações por PIX', 'pix', 'static', { key: 'doacoes@exemplo.org.br', name: 'Instituto Exemplo', city: 'Belo Horizonte', amount: '', txid: '' }, { fg: '#12804A', eye: '#12804A', eyeShape: 'rounded', logo: { kind: 'icon', icon: 'heart' } }, true, 33, 0, 0, [[33, 'QR Code criado']]),
+    mk('f9s3ng', 'Instruções de retirada', 'text', 'dynamic', { text: 'Retire o pedido no balcão 2 com o número da comanda.' }, {}, false, 205, 9, 1900, [[205, 'QR Code criado'], [40, 'QR Code desativado']])
+  ];
+}
+
+/* ---------- estatísticas simuladas ---------- */
+const CITIES = [['São Paulo', 'BR', 30], ['Rio de Janeiro', 'BR', 16], ['Belo Horizonte', 'BR', 12], ['Brasília', 'BR', 9], ['Salvador', 'BR', 7], ['Porto Alegre', 'BR', 6], ['Curitiba', 'BR', 6], ['Lisboa', 'PT', 4], ['Buenos Aires', 'AR', 3], ['Miami', 'US', 2]];
+const COUNTRY = { BR: 'Brasil', PT: 'Portugal', AR: 'Argentina', US: 'Estados Unidos' };
+const DEVS = [['Mobile', 86], ['Desktop', 10], ['Tablet', 4]];
+const OSS = [['Android', 54], ['iOS', 38], ['Windows', 5], ['macOS', 2], ['Outros', 1]];
+function distribute(seedKey, items, total) {
+  const r = mulberry32(hashStr(seedKey));
+  const w = items.map(it => it[it.length - 1] * (0.6 + r() * 0.8));
+  const sw = w.reduce((a, b) => a + b, 0);
+  const raw = w.map(x => x / sw * total), base = raw.map(Math.floor);
+  let left = total - base.reduce((a, b) => a + b, 0);
+  raw.map((x, i) => [x - base[i], i]).sort((a, b) => b[0] - a[0]).forEach(p => { if (left > 0) { base[p[1]]++; left--; } });
+  return items.map((it, i) => ({ item: it, count: base[i] })).sort((a, b) => b.count - a.count);
+}
+function niceScale(mx) {
+  if (mx <= 4) return { top: 4, step: 1 };
+  const raw = mx / 4, mag = Math.pow(10, Math.floor(Math.log10(raw))), f = raw / mag;
+  const nice = f <= 1 ? 1 : f <= 2 ? 2 : f <= 5 ? 5 : 10;
+  return { top: nice * mag * 4, step: nice * mag };
+}
+const dayOf = (i, n) => new Date(Date.now() - (n - 1 - i) * DAY);
+
+/* ---------- contexto ---------- */
+const Ctx = createContext(null);
+const useApp = () => useContext(Ctx);
+
+/* ---------- peças pequenas ---------- */
+function Switch({ on, onChange, label }) {
+  return html`<button type="button" role="switch" aria-checked=${on} aria-label=${label} className="switch" onClick=${() => onChange(!on)}></button>`;
+}
+function StatusPill({ active }) {
+  return html`<span className=${cx('pill', active ? 'good' : 'off')}><span className="dot"></span>${active ? 'Ativo' : 'Inativo'}</span>`;
+}
+function TypePill({ qr }) {
+  return html`<span className="pill"><${Icon} n=${TYPES[qr.type].icon} size=${13} />${TYPES[qr.type].short}${qr.mode === 'static' ? ' · estático' : ''}</span>`;
+}
+function QRThumb({ qr, size = 48 }) {
+  const enc = encodedOf(qr), ecl = qr.style.logo.kind !== 'none' ? 'H' : 'M';
+  const r = useMemo(() => { const m = getMatrix(enc, ecl); return m ? buildSvg(m, qr.style) : null; }, [enc, ecl, qr.style]);
+  return html`<div className="thumb" style=${{ width: size, height: size }} dangerouslySetInnerHTML=${{ __html: r ? r.svg : '' }}></div>`;
+}
+function Tabs({ items, value, onChange, label }) {
+  return html`<div className="seg" role="tablist" aria-label=${label}>
+    ${items.map(t => html`<button key=${t.id} type="button" role="tab" aria-selected=${value === t.id} onClick=${() => onChange(t.id)}>${t.icon ? html`<${Icon} n=${t.icon} size=${15} />` : null}${t.label}</button>`)}
+  </div>`;
+}
+function Field({ id, label, hint, children }) {
+  return html`<div><label className="lbl" htmlFor=${id}>${label}</label>${children}${hint ? html`<div className="hint">${hint}</div>` : null}</div>`;
+}
+function TextField({ id, label, value, onChange, placeholder, type = 'text', mono, area, hint }) {
+  return html`<${Field} id=${id} label=${label} hint=${hint}>
+    ${area ? html`<textarea id=${id} className=${cx('inp', mono && 'mono')} value=${value} placeholder=${placeholder} onChange=${e => onChange(e.target.value)}></textarea>`
+      : html`<input id=${id} type=${type} className=${cx('inp', mono && 'mono')} value=${value} placeholder=${placeholder} onChange=${e => onChange(e.target.value)} />`}
+  <//>`;
+}
+
+/* ---------- formulário de conteúdo ---------- */
+function ContentForm({ type, data, onChange, idp = 'f' }) {
+  const set = k => v => onChange({ ...data, [k]: v });
+  const T = (k, label, extra = {}) => html`<${TextField} id=${idp + '-' + k} label=${label} value=${data[k] || ''} onChange=${set(k)} ...${extra} />`;
+  if (type === 'url') return html`<div className="grid gap-4">${T('url', 'Endereço de destino', { placeholder: 'https://exemplo.com.br/oferta', mono: true, hint: 'O código sempre aponta para o link curto do sistema. Este endereço pode mudar depois.' })}</div>`;
+  if (type === 'text') return html`<div className="grid gap-4">${T('text', 'Texto', { area: true, placeholder: 'Escreva a mensagem que aparece ao escanear' })}</div>`;
+  if (type === 'wifi') return html`<div className="grid gap-4 sm:grid-cols-2">
+    ${T('ssid', 'Nome da rede (SSID)', { placeholder: 'MinhaRede' })}
+    ${T('pass', 'Senha', { placeholder: 'Senha da rede' })}
+    <${Field} id=${idp + '-enc'} label="Segurança"><select id=${idp + '-enc'} className="inp" value=${data.enc} onChange=${e => set('enc')(e.target.value)}><option value="WPA">WPA/WPA2/WPA3</option><option value="WEP">WEP</option><option value="nopass">Sem senha</option></select><//>
+  </div>`;
+  if (type === 'vcard') return html`<div className="grid gap-4 sm:grid-cols-2">
+    ${T('first', 'Nome')}${T('last', 'Sobrenome')}${T('org', 'Empresa')}${T('title', 'Cargo')}
+    ${T('phone', 'Celular', { placeholder: '+55 11 90000-0000', type: 'tel' })}${T('email', 'E-mail', { type: 'email' })}
+    <div className="sm:col-span-2">${T('site', 'Site', { placeholder: 'exemplo.com.br' })}</div>
+  </div>`;
+  if (type === 'email') return html`<div className="grid gap-4">${T('to', 'E-mail de destino', { type: 'email', placeholder: 'contato@exemplo.com.br' })}${T('subject', 'Assunto')}${T('body', 'Mensagem', { area: true })}</div>`;
+  if (type === 'sms') return html`<div className="grid gap-4">${T('phone', 'Número com DDD', { type: 'tel', placeholder: '+55 11 90000-0000' })}${T('msg', 'Mensagem', { area: true })}</div>`;
+  return html`<div className="grid gap-4 sm:grid-cols-2">
+    <div className="sm:col-span-2">${T('key', 'Chave PIX', { placeholder: 'CPF, CNPJ, e-mail, celular ou chave aleatória', mono: true })}</div>
+    ${T('name', 'Nome do recebedor', { placeholder: 'Até 25 caracteres' })}${T('city', 'Cidade', { placeholder: 'Até 15 caracteres' })}
+    ${T('amount', 'Valor (opcional)', { placeholder: '0,00', hint: 'Deixe vazio para o pagador digitar o valor.' })}${T('txid', 'Identificador (opcional)', { placeholder: 'pedido123' })}
+  </div>`;
+}
+
+/* ---------- controles de estilo ---------- */
+function ColorField({ id, label, value, onChange, presets }) {
+  const [txt, setTxt] = useState(value);
+  useEffect(() => setTxt(value), [value]);
+  return html`<div>
+    <label className="lbl" htmlFor=${id + '-hex'}>${label}</label>
+    <div className="colorbox">
+      <input type="color" id=${id} aria-label=${label + ' (seletor)'} value=${value} onChange=${e => onChange(e.target.value.toUpperCase())} />
+      <input id=${id + '-hex'} className="inp mono" style=${{ maxWidth: 120 }} value=${txt} maxLength="7" onChange=${e => { const v = e.target.value; setTxt(v); if (isHex(v)) onChange(v.toUpperCase()); }} />
+    </div>
+    ${presets ? html`<div className="flex flex-wrap gap-2 mt-2">${presets.map(c => html`<button key=${c} type="button" className="swatch" aria-label=${'Usar ' + c} aria-pressed=${value.toUpperCase() === c} style=${{ background: c }} onClick=${() => onChange(c)}></button>`)}</div>` : null}
+  </div>`;
+}
+const PRESETS = ['#10202C', '#3447D4', '#12804A', '#B3261E', '#7A3FF2', '#C2410C'];
+function ShapeGlyph({ kind, group }) {
+  const c = 'currentColor';
+  if (group === 'dot') {
+    const cells = [[0, 0], [2, 0], [1, 1], [0, 2], [2, 2]];
+    return html`<svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true">${cells.map(p => kind === 'dots' ? html`<circle key=${p.join()} cx=${5 + p[0] * 10} cy=${5 + p[1] * 10} r="4" fill=${c} />` : html`<rect key=${p.join()} x=${1 + p[0] * 10} y=${1 + p[1] * 10} width="8" height="8" rx=${kind === 'rounded' ? 3 : 0} fill=${c} />`)}</svg>`;
+  }
+  const r = EYE_R[kind];
+  return html`<svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><path fillRule="evenodd" fill=${c} d=${rr(1, 1, 28, 28, r[0] * 4) + rr(5, 5, 20, 20, r[1] * 4)} /><path fill=${c} d=${rr(10, 10, 10, 10, r[2] * 3.3)} /></svg>`;
+}
+function ShapePicker({ group, value, options, onChange, label }) {
+  return html`<div className="flex flex-wrap gap-2" role="group" aria-label=${label}>${options.map(o => html`<button key=${o[0]} type="button" className="opt" aria-pressed=${value === o[0]} onClick=${() => onChange(o[0])}><${ShapeGlyph} kind=${o[0]} group=${group} />${o[1]}</button>`)}</div>`;
+}
+
+/* ---------- barra de download ---------- */
+function DownloadBar({ qr, disabled }) {
+  const app = useApp();
+  const [busy, setBusy] = useState('');
+  const run = async f => {
+    setBusy(f);
+    try {
+      const file = await makeFile(f, qr);
+      if (app.dl) { await app.dl.save({ filename: file.name, data: file.blob }); app.notify('Arquivo ' + file.name + ' pronto'); }
+      else { const a = document.createElement('a'); a.href = URL.createObjectURL(file.blob); a.download = file.name; document.body.appendChild(a); a.click(); a.remove(); app.notify('Baixando ' + file.name); }
+    } catch (e) {
+      if (e && e.code === 'declined') app.notify('Download cancelado');
+      else if (e && e.message === 'long') app.notify('Conteúdo longo demais para um QR Code');
+      else app.notify('Não foi possível gerar o arquivo');
+    }
+    setBusy('');
+  };
+  const B = [['png', 'PNG', 'Image'], ['svg', 'SVG', 'Shapes'], ['jpg', 'JPG', 'Image'], ['pdf', 'PDF', 'Download']];
+  return html`<div>
+    <div className="eyebrow mb-2">Baixar em alta resolução</div>
+    <div className="grid grid-cols-2 gap-2">${B.map(b => html`<button key=${b[0]} type="button" className="btn" disabled=${disabled || !!busy} onClick=${() => run(b[0])}><${Icon} n="Download" size=${16} />${busy === b[0] ? 'Gerando...' : b[1]}</button>`)}</div>
+    <div className="hint">PNG e JPG com 2048 px, SVG vetorial para gráfica e PDF em A4.</div>
+  </div>`;
+}
+
+/* ---------- estúdio (criar / editar aparência) ---------- */
+const FRAME_PRESETS = ['Escaneie-me', 'Wi-Fi Grátis', 'Cardápio', 'Siga-nos', 'Pague com PIX', 'Avalie-nos'];
+function Studio({ draft, setDraft, mode, onSubmit, submitLabel, onCancel }) {
+  const [tab, setTab] = useState(mode === 'style' ? 'colors' : 'content');
+  const st = draft.style, lg = st.logo, fr = st.frame;
+  const setStyle = p => setDraft(d => ({ ...d, style: { ...d.style, ...p } }));
+  const setLogo = p => setStyle({ logo: { ...lg, ...p } });
+  const setFrame = p => setStyle({ frame: { ...fr, ...p } });
+  const enc = encodedOf(draft), ecl = lg.kind !== 'none' ? 'H' : 'M';
+  const r = useMemo(() => { const m = getMatrix(enc, ecl); return m ? buildSvg(m, st) : null; }, [enc, ecl, st]);
+  const err = mode === 'style' ? '' : validate(draft.type, curData(draft));
+  const warns = [];
+  if (isHex(st.fg) && isHex(st.bg)) {
+    if (lum(st.fg) > lum(st.bg)) warns.push('Cores invertidas (módulos mais claros que o fundo). Alguns leitores não conseguem ler.');
+    else if (ratio(st.fg, st.bg) < 4) warns.push('Contraste baixo entre módulos e fundo. Escureça os módulos para o código ser lido com facilidade.');
+  }
+  if (isHex(st.eye) && isHex(st.bg) && ratio(st.eye, st.bg) < 3) warns.push('A cor dos olhos está com pouco contraste com o fundo.');
+  const onFile = e => {
+    const f = e.target.files && e.target.files[0]; if (!f) return;
+    if (f.size > 1.5 * 1024 * 1024) { setLogoErr('Imagem acima de 1,5 MB. Use um arquivo menor.'); return; }
+    const rd = new FileReader(); rd.onload = () => { setLogoErr(''); setLogo({ kind: 'image', src: rd.result }); }; rd.readAsDataURL(f);
+  };
+  const [logoErr, setLogoErr] = useState('');
+  const tabs = [mode === 'style' ? null : { id: 'content', label: 'Conteúdo', icon: 'QrCode' }, { id: 'colors', label: 'Cores e formas', icon: 'Palette' }, { id: 'logo', label: 'Logotipo', icon: 'Image' }, { id: 'frame', label: 'Moldura', icon: 'Frame' }].filter(Boolean);
+  const setType = t => setDraft(d => ({ ...d, type: t, mode: defaultMode(t) }));
+  return html`<div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_368px] items-start">
+    <section className="card pad grid gap-5 min-w-0">
+      <${Tabs} items=${tabs} value=${tab} onChange=${setTab} label="Seções do editor" />
+      ${tab === 'content' ? html`<div className="grid gap-5">
+        <div>
+          <div className="lbl">Tipo de conteúdo</div>
+          <div className="typegrid">${Object.keys(TYPES).map(k => html`<button key=${k} type="button" className="typebtn" aria-pressed=${draft.type === k} onClick=${() => setType(k)}><${Icon} n=${TYPES[k].icon} size=${17} />${TYPES[k].label}</button>`)}</div>
+        </div>
+        <${TextField} id="qr-name" label="Nome interno" value=${draft.name} onChange=${v => setDraft(d => ({ ...d, name: v }))} placeholder="Ex.: Cardápio da mesa" hint="Só você vê este nome. Ele aparece na lista e nos arquivos baixados." />
+        ${draft.type === 'url' ? html`<div><div className="lbl">Modo do código</div><${Tabs} label="Modo do código" value=${draft.mode} onChange=${v => setDraft(d => ({ ...d, mode: v }))} items=${[{ id: 'dynamic', label: 'Dinâmico' }, { id: 'static', label: 'Estático' }]} /><div className="hint">Dinâmico: permite mudar o destino após imprimir.</div></div>` : null}
+        ${false ? html`<div>
+          <div className="lbl">Modo do código</div>
+          <${Tabs} label="Modo do código" value=${draft.mode} onChange=${v => setDraft(d => ({ ...d, mode: v }))} items=${[{ id: 'dynamic', label: 'Dinâmico' }, { id: 'static', label: 'Estático' }]} />
+          <div className="hint">${draft.mode === 'dynamic' ? 'O código leva a um link curto. Você pode editar o endereço depois.' : 'O conteúdo vai gravado no código. Não dá para editar nem contar leituras, mas apps de banco e a câmera leem direto.'}</div>
+        </div>` : null}
+        <${ContentForm} type=${draft.type} data=${curData(draft)} idp="new" onChange=${v => setDraft(d => ({ ...d, datas: { ...d.datas, [d.type]: v } }))} />
+      </div>` : null}
+      ${tab === 'colors' ? html`<div className="grid gap-6">
+        <div className="grid gap-4 sm:grid-cols-3">
+          <${ColorField} id="c-fg" label="Cor dos módulos" value=${st.fg} onChange=${v => setStyle({ fg: v })} presets=${PRESETS} />
+          <${ColorField} id="c-bg" label="Cor de fundo" value=${st.bg} onChange=${v => setStyle({ bg: v })} presets=${['#FFFFFF', '#F2F5F8', '#FFF8E1', '#E8EBFC']} />
+          <${ColorField} id="c-eye" label="Cor dos olhos" value=${st.eye} onChange=${v => setStyle({ eye: v })} presets=${PRESETS} />
+        </div>
+        ${warns.map(w => html`<div key=${w} className="banner" role="status"><${Icon} n="ScanLine" size=${16} />${w}</div>`)}
+        <div><div className="lbl">Formato dos pontos</div><${ShapePicker} group="dot" label="Formato dos pontos" value=${st.dot} onChange=${v => setStyle({ dot: v })} options=${[['square', 'Quadrado'], ['rounded', 'Arredondado'], ['dots', 'Pontos']]} /></div>
+        <div><div className="lbl">Formato dos olhos (cantos)</div><${ShapePicker} group="eye" label="Formato dos olhos" value=${st.eyeShape} onChange=${v => setStyle({ eyeShape: v })} options=${[['square', 'Quadrado'], ['rounded', 'Arredondado'], ['circle', 'Circular']]} /></div>
+      </div>` : null}
+      ${tab === 'logo' ? html`<div className="grid gap-5">
+        <${Tabs} label="Tipo de logotipo" value=${lg.kind} onChange=${v => setLogo({ kind: v })} items=${[{ id: 'none', label: 'Sem logotipo' }, { id: 'icon', label: 'Ícone' }, { id: 'image', label: 'Enviar imagem' }]} />
+        ${lg.kind === 'icon' ? html`<div className="flex flex-wrap gap-2" role="group" aria-label="Ícones">${Object.keys(ICONS).map(k => html`<button key=${k} type="button" className="opt" aria-pressed=${lg.icon === k} onClick=${() => setLogo({ icon: k })}>
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">${ICONS[k].map((p, i) => html`<path key=${i} d=${p} />`)}</svg>${ICON_LABELS[k]}</button>`)}</div>` : null}
+        ${lg.kind === 'image' ? html`<div>
+          <label className="lbl" htmlFor="logo-file">Imagem do logotipo (PNG, JPG ou SVG, até 1,5 MB)</label>
+          <input id="logo-file" type="file" accept="image/*" className="inp" style=${{ paddingTop: 7 }} onChange=${onFile} />
+          ${logoErr ? html`<div className="hint" style=${{ color: 'var(--crit)' }}>${logoErr}</div>` : null}
+          ${lg.src ? html`<div className="flex items-center gap-3 mt-3"><img src=${lg.src} alt="Logotipo enviado" width="48" height="48" style=${{ borderRadius: 10, objectFit: 'cover', border: '1px solid var(--line)' }} /><button type="button" className="btn btn-sm" onClick=${() => setLogo({ src: null, kind: 'none' })}>Remover</button></div>` : null}
+        </div>` : null}
+        ${lg.kind !== 'none' ? html`<div className="banner info" role="status"><${Icon} n="ScanLine" size=${16} />Com logotipo, o código usa correção de erro alta (nível H) para continuar legível. Teste a leitura antes de imprimir.</div>` : null}
+      </div>` : null}
+      ${tab === 'frame' ? html`<div className="grid gap-5">
+        <div className="flex items-center gap-3"><${Switch} on=${fr.on} onChange=${v => setFrame({ on: v })} label="Mostrar moldura" /><span className="font-semibold">Mostrar moldura com chamada</span></div>
+        <div className="flex flex-wrap gap-2" role="group" aria-label="Textos prontos">${FRAME_PRESETS.map(p => html`<button key=${p} type="button" className="pill" style=${{ cursor: 'pointer', background: fr.text === p ? 'var(--accent-soft)' : undefined, color: fr.text === p ? 'var(--accent)' : undefined }} onClick=${() => setFrame({ on: true, text: p })}>${p}</button>`)}</div>
+        <${TextField} id="frame-text" label="Texto da moldura" value=${fr.text} onChange=${v => setFrame({ text: v.slice(0, 28), on: true })} placeholder="Escaneie-me" hint="Até 28 caracteres." />
+        <${ColorField} id="c-frame" label="Cor da moldura" value=${fr.color} onChange=${v => setFrame({ color: v })} presets=${PRESETS} />
+      </div>` : null}
+    </section>
+    <aside className="card pad grid gap-5 lg:sticky lg:top-8 min-w-0" aria-label="Pré-visualização">
+      <div className="flex items-center justify-between gap-2"><div className="eyebrow">Pré-visualização ao vivo</div>${draft.mode === 'dynamic' ? html`<span className="pill accent">Dinâmico</span>` : html`<span className="pill">Estático</span>`}</div>
+      <div style=${{ background: '#fff', borderRadius: 12, padding: 12, border: '1px solid var(--line)', maxWidth: 320, width: '100%', margin: '0 auto' }}>
+        ${r ? html`<div className="qrwrap" role="img" aria-label="Pré-visualização do QR Code" dangerouslySetInnerHTML=${{ __html: r.svg }}></div>` : html`<div className="hint" style=${{ padding: 24, textAlign: 'center' }}>Conteúdo longo demais para um QR Code. Reduza o texto.</div>`}
+      </div>
+      <div>
+        <div className="eyebrow mb-1">${draft.mode === 'dynamic' ? 'Link curto gravado no código' : 'Conteúdo gravado no código'}</div>
+        <div className="mono" style=${{ wordBreak: 'break-all', color: 'var(--muted)', maxHeight: 76, overflow: 'hidden' }}>${enc}</div>
+      </div>
+      <${DownloadBar} qr=${{ ...draft, name: draft.name || 'qr-code' }} disabled=${!r || !!err} />
+      ${err ? html`<div className="banner" role="status">${err}</div>` : null}
+      <div className="flex gap-2">
+        <button type="button" className="btn btn-primary" style=${{ flex: 1 }} disabled=${!!err || !r} onClick=${onSubmit}><${Icon} n="Check" size=${16} />${submitLabel}</button>
+        ${onCancel ? html`<button type="button" className="btn" onClick=${onCancel}>Cancelar</button>` : null}
+      </div>
+    </aside>
+  </div>`;
+}
+
+/* ---------- gráficos ---------- */
+function AreaChart({ data, height = 232, label }) {
+  const [hi, setHi] = useState(null);
+  const ref = useRef(null);
+  const W = 720, H = height, ml = 40, mr = 14, mt = 14, mb = 28, n = data.length, pw = W - ml - mr, ph = H - mt - mb;
+  const mx = Math.max(0, ...data), sc = niceScale(mx);
+  const x = i => ml + (n === 1 ? pw / 2 : i * pw / (n - 1)), y = v => mt + ph - v / sc.top * ph;
+  const line = data.map((v, i) => (i ? 'L' : 'M') + x(i).toFixed(1) + ' ' + y(v).toFixed(1)).join(' ');
+  const area = line + ' L' + x(n - 1).toFixed(1) + ' ' + (mt + ph) + ' L' + x(0).toFixed(1) + ' ' + (mt + ph) + ' Z';
+  const ticks = [0, 1, 2, 3, 4].map(k => k * sc.step);
+  const xl = []; for (let i = 0; i < n; i++) if (n <= 7 || (n - 1 - i) % 5 === 0) xl.push(i);
+  const fd = d => d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+  const onMove = e => { const b = ref.current.getBoundingClientRect(); const px = (e.clientX - b.left) / b.width * W; setHi(Math.max(0, Math.min(n - 1, Math.round((px - ml) / pw * (n - 1))))); };
+  const gid = useMemo(() => 'g' + (++uid), []);
+  const tipRight = hi !== null && x(hi) / W > 0.65;
+  return html`<div style=${{ position: 'relative' }}>
+    <svg ref=${ref} viewBox=${'0 0 ' + W + ' ' + H} width="100%" role="img" aria-label=${label} style=${{ display: 'block', touchAction: 'pan-y' }} onPointerMove=${onMove} onPointerLeave=${() => setHi(null)}>
+      <defs><linearGradient id=${gid} x1="0" x2="0" y1="0" y2="1"><stop offset="0" stopColor="var(--accent)" stopOpacity="0.22" /><stop offset="1" stopColor="var(--accent)" stopOpacity="0.02" /></linearGradient></defs>
+      ${ticks.map(t => html`<g key=${t}><line x1=${ml} x2=${W - mr} y1=${y(t)} y2=${y(t)} stroke="var(--grid)" strokeWidth="1" /><text x=${ml - 8} y=${y(t) + 4} textAnchor="end" fontSize="11" fill="var(--muted)" className="num">${fmt(t)}</text></g>`)}
+      ${xl.map(i => html`<text key=${i} x=${x(i)} y=${H - 8} textAnchor="middle" fontSize="11" fill="var(--muted)">${fd(dayOf(i, n))}</text>`)}
+      <path d=${area} fill=${'url(#' + gid + ')'} />
+      <path d=${line} fill="none" stroke="var(--accent)" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
+      ${hi === null ? html`<g><circle cx=${x(n - 1)} cy=${y(data[n - 1])} r="5" fill="var(--accent)" stroke="var(--surface)" strokeWidth="2" /></g>` : html`<g>
+        <line x1=${x(hi)} x2=${x(hi)} y1=${mt} y2=${mt + ph} stroke="var(--faint)" strokeWidth="1" strokeDasharray="3 3" />
+        <circle cx=${x(hi)} cy=${y(data[hi])} r="5" fill="var(--accent)" stroke="var(--surface)" strokeWidth="2" /></g>`}
+    </svg>
+    ${hi !== null ? html`<div className="tip" style=${{ top: 6, left: (x(hi) / W * 100) + '%', transform: tipRight ? 'translateX(calc(-100% - 12px))' : 'translateX(12px)' }}>
+      <div style=${{ opacity: .75 }}>${dayOf(hi, n).toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: 'short' })}</div><b className="num">${fmt(data[hi])}</b> scans</div>` : null}
+  </div>`;
+}
+function Spark({ data }) {
+  const W = 120, H = 36, n = data.length, mx = Math.max(1, ...data);
+  const x = i => 3 + i * (W - 6) / (n - 1), y = v => H - 4 - v / mx * (H - 10);
+  const line = data.map((v, i) => (i ? 'L' : 'M') + x(i).toFixed(1) + ' ' + y(v).toFixed(1)).join(' ');
+  return html`<svg viewBox=${'0 0 ' + W + ' ' + H} width="100%" height="36" aria-hidden="true" style=${{ display: 'block' }}>
+    <path d=${line + ' L' + x(n - 1) + ' ' + H + ' L' + x(0) + ' ' + H + ' Z'} fill="var(--accent)" opacity="0.12" />
+    <path d=${line} fill="none" stroke="var(--accent)" strokeWidth="1.75" strokeLinejoin="round" />
+    <circle cx=${x(n - 1)} cy=${y(data[n - 1])} r="3" fill="var(--accent)" /></svg>`;
+}
+function HBars({ rows, empty }) {
+  const mx = Math.max(1, ...rows.map(r => r.count)), tot = rows.reduce((a, r) => a + r.count, 0);
+  if (!tot) return html`<div className="hint">${empty}</div>`;
+  return html`<div className="grid gap-3">${rows.map(r => html`<div key=${r.label}>
+    <div className="flex items-baseline justify-between gap-3 text-sm"><span style=${{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>${r.label}${r.sub ? html`<span style=${{ color: 'var(--faint)' }}> · ${r.sub}</span>` : null}</span><span className="num" style=${{ color: 'var(--muted)' }}>${fmt(r.count)} · ${Math.round(r.count / tot * 100)}%</span></div>
+    <div className="bar mt-1"><i style=${{ width: (r.count / mx * 100) + '%' }}></i></div></div>`)}</div>`;
+}
+
+/* ---------- linhas e listas ---------- */
+function QRRow({ qr }) {
+  const app = useApp();
+  const [ask, setAsk] = useState(false);
+  return html`<div className="qrrow">
+    <div className="thumbcell"><${QRThumb} qr=${qr} size=${56} /></div>
+    <div style=${{ minWidth: 0 }} className="cell"><div style=${{ minWidth: 0 }}><div className="qrname">${qr.name}</div><div className="mono" style=${{ color: 'var(--faint)', fontSize: 12 }}>${qr.mode === 'dynamic' ? '/qr/' + qr.code : 'conteúdo direto'}</div></div></div>
+    <div className="cell" data-label="Tipo"><${TypePill} qr=${qr} /></div>
+    <div className="cell num" data-label="Scans" style=${{ fontWeight: 700 }}>${qr.mode === 'dynamic' ? fmt(qr.totalScans) : html`<span style=${{ color: 'var(--faint)', fontWeight: 500 }} title="Códigos estáticos não contam leituras">—</span>`}</div>
+    <div className="cell" data-label="Status"><${Switch} on=${qr.active} onChange=${v => app.update(qr.id, { active: v }, v ? 'QR Code ativado' : 'QR Code desativado')} label=${'Ativar ' + qr.name} /><${StatusPill} active=${qr.active} /></div>
+    <div className="cell" style=${{ justifyContent: 'flex-start', gap: 2 }}>
+      ${ask ? html`<span className="text-sm" style=${{ color: 'var(--crit)', fontWeight: 600 }}>Excluir?</span><button type="button" className="btn btn-sm btn-danger" onClick=${() => app.remove(qr.id)}>Sim</button><button type="button" className="btn btn-sm" onClick=${() => setAsk(false)}>Não</button>` : html`
+        <button type="button" className="iconbtn" title="Estatísticas" aria-label=${'Estatísticas de ' + qr.name} onClick=${() => app.go({ page: 'detail', id: qr.id, tab: 'stats' })}><${Icon} n="BarChart3" size=${17} /></button>
+        <button type="button" className="iconbtn" title="Editar" aria-label=${'Editar ' + qr.name} onClick=${() => app.go({ page: 'detail', id: qr.id, tab: qr.mode === 'dynamic' ? 'dest' : 'style' })}><${Icon} n="Pencil" size=${17} /></button>
+        <button type="button" className="iconbtn" title="Duplicar" aria-label=${'Duplicar ' + qr.name} onClick=${() => app.duplicate(qr.id)}><${Icon} n="Copy" size=${17} /></button>
+        <button type="button" className="iconbtn" title="Excluir" aria-label=${'Excluir ' + qr.name} onClick=${() => setAsk(true)}><${Icon} n="Trash2" size=${17} /></button>`}
+    </div>
+  </div>`;
+}
+function QRList({ items, empty }) {
+  if (!items.length) return html`<div className="pad" style=${{ textAlign: 'center', color: 'var(--muted)' }}>${empty}</div>`;
+  return html`<div><div className="qrhead eyebrow"><span></span><span>Nome</span><span>Tipo</span><span>Scans</span><span>Status</span><span>Ações</span></div>${items.map(q => html`<${QRRow} key=${q.id} qr=${q} />`)}</div>`;
+}
+
+/* ---------- páginas ---------- */
+function PageHead({ title, sub, children }) {
+  return html`<div className="flex flex-wrap items-end justify-between gap-3 mb-6"><div style=${{ minWidth: 0 }}><h1 style=${{ fontSize: 28, lineHeight: 1.15 }}>${title}</h1>${sub ? html`<p style=${{ color: 'var(--muted)', margin: '4px 0 0' }}>${sub}</p>` : null}</div><div className="flex gap-2 flex-wrap">${children}</div></div>`;
+}
+function StatCard({ icon, label, value, extra, spark }) {
+  return html`<div className="card pad" style=${{ padding: 16 }}>
+    <div className="flex items-center gap-2" style=${{ color: 'var(--muted)', fontWeight: 600, fontSize: 13 }}><${Icon} n=${icon} size=${16} />${label}</div>
+    <div className="num" style=${{ fontFamily: 'var(--f-display)', fontSize: 32, fontWeight: 700, lineHeight: 1.2, marginTop: 6 }}>${value}</div>
+    ${spark ? html`<div style=${{ marginTop: 6 }}><${Spark} data=${spark} /></div>` : null}
+    ${extra ? html`<div style=${{ marginTop: 6 }}>${extra}</div>` : null}
+  </div>`;
+}
+function Home() {
+  const app = useApp(), qrs = app.qrs;
+  const total = qrs.reduce((a, q) => a + q.totalScans, 0);
+  const daily = Array.from({ length: 30 }, (_, i) => qrs.reduce((a, q) => a + q.scans30[i], 0));
+  const s30 = daily.reduce((a, b) => a + b, 0), act = qrs.filter(q => q.active).length;
+  const recent = [...qrs].sort((a, b) => b.createdAt - a.createdAt).slice(0, 5);
+  return html`<div>
+    <${PageHead} title="Visão geral" sub="Todos os seus QR Codes dinâmicos em um só lugar.">
+      <button type="button" className="btn btn-primary" onClick=${() => app.go({ page: 'create' })}><${Icon} n="Plus" size=${17} />Novo QR Code</button>
+    <//>
+    <div className="grid gap-4 grid-cols-2 xl:grid-cols-4">
+      <${StatCard} icon="QrCode" label="QR Codes criados" value=${fmt(qrs.length)} extra=${html`<span className="hint" style=${{ margin: 0 }}>${qrs.filter(q => q.mode === 'dynamic').length} dinâmicos, ${qrs.filter(q => q.mode === 'static').length} estáticos</span>`} />
+      <${StatCard} icon="ScanLine" label="Scans totais" value=${fmt(total)} />
+      <${StatCard} icon="BarChart3" label="Scans em 30 dias" value=${fmt(s30)} spark=${daily} />
+      <${StatCard} icon="Power" label="Ativos / inativos" value=${html`${act}<span style=${{ color: 'var(--faint)' }}> / ${qrs.length - act}</span>`} extra=${html`<span className="pill good"><span className="dot"></span>${act} no ar</span>`} />
+    </div>
+    <section className="card pad mt-6" aria-labelledby="h-agg">
+      <div className="flex flex-wrap items-center justify-between gap-2 mb-2"><h2 id="h-agg" style=${{ fontSize: 18 }}>Scans por dia, todos os códigos</h2><span className="pill">Últimos 30 dias</span></div>
+      <${AreaChart} data=${daily} label="Gráfico de scans por dia nos últimos 30 dias, somando todos os QR Codes" />
+    </section>
+    <section className="card mt-6" style=${{ overflow: 'hidden' }} aria-labelledby="h-rec">
+      <div className="flex items-center justify-between gap-2" style=${{ padding: '16px 16px 12px' }}><h2 id="h-rec" style=${{ fontSize: 18 }}>Criados recentemente</h2><button type="button" className="btn btn-sm" onClick=${() => app.go({ page: 'list' })}>Ver todos</button></div>
+      <${QRList} items=${recent} empty="Você ainda não criou nenhum QR Code." />
+    </section>
+  </div>`;
+}
+function ListPage() {
+  const app = useApp();
+  const [q, setQ] = useState(''), [tp, setTp] = useState('all'), [stt, setStt] = useState('all');
+  const items = app.qrs.filter(x => (tp === 'all' || x.type === tp) && (stt === 'all' || (stt === 'on') === x.active) && (!q.trim() || (x.name + ' ' + x.code).toLowerCase().includes(q.trim().toLowerCase()))).sort((a, b) => b.createdAt - a.createdAt);
+  return html`<div>
+    <${PageHead} title="Meus QR Codes" sub=${app.qrs.length + ' códigos nesta conta'}>
+      <button type="button" className="btn btn-primary" onClick=${() => app.go({ page: 'create' })}><${Icon} n="Plus" size=${17} />Novo QR Code</button>
+    <//>
+    <div className="flex flex-wrap gap-3 mb-4">
+      <div style=${{ position: 'relative', flex: '1 1 220px', minWidth: 0 }}><span style=${{ position: 'absolute', left: 12, top: 11, color: 'var(--faint)' }}><${Icon} n="Search" size=${17} /></span><input id="busca" className="inp" style=${{ paddingLeft: 38 }} placeholder="Buscar por nome ou código" aria-label="Buscar QR Codes" value=${q} onChange=${e => setQ(e.target.value)} /></div>
+      <select id="f-tipo" className="inp" style=${{ width: 'auto', minWidth: 150 }} aria-label="Filtrar por tipo" value=${tp} onChange=${e => setTp(e.target.value)}><option value="all">Todos os tipos</option>${Object.keys(TYPES).map(k => html`<option key=${k} value=${k}>${TYPES[k].label}</option>`)}</select>
+      <${Tabs} label="Filtrar por status" value=${stt} onChange=${setStt} items=${[{ id: 'all', label: 'Todos' }, { id: 'on', label: 'Ativos' }, { id: 'off', label: 'Inativos' }]} />
+    </div>
+    <div className="card" style=${{ overflow: 'hidden' }}><${QRList} items=${items} empty="Nenhum QR Code encontrado com esses filtros." /></div>
+  </div>`;
+}
+function CreatePage() {
+  const app = useApp();
+  const [draft, setDraft] = useState(() => { const code = newCode(); return { id: 'q' + code, code, name: '', type: 'url', mode: 'dynamic', datas: emptyData(), style: mkStyle({ dot: 'rounded', eyeShape: 'rounded' }) }; });
+  const submit = () => {
+    const data = { ...curData(draft) }; if (draft.type === 'url') data.url = normUrl(data.url);
+    app.add({ id: draft.id, code: draft.code, name: draft.name.trim() || TYPES[draft.type].label + ' ' + (app.qrs.length + 1), type: draft.type, mode: draft.mode, data, style: draft.style, active: true, createdAt: Date.now(), scans30: Array(30).fill(0), totalScans: 0, history: [{ at: Date.now(), text: 'QR Code criado' }] });
+  };
+  return html`<div><${PageHead} title="Criar QR Code" sub="Escolha o conteúdo, ajuste o visual e acompanhe o resultado ao lado." /><${Studio} draft=${draft} setDraft=${setDraft} mode="create" submitLabel="Criar QR Code" onSubmit=${submit} onCancel=${() => app.go({ page: 'list' })} /></div>`;
+}
+
+function StatsTab({ qr }) {
+  const [range, setRange] = useState(30);
+  const data = qr.scans30.slice(30 - range);
+  const tot = data.reduce((a, b) => a + b, 0), peak = Math.max(0, ...data), pk = data.indexOf(peak);
+  const geo = useMemo(() => distribute(qr.id + 'g', CITIES, tot), [qr.id, tot]);
+  const dev = useMemo(() => distribute(qr.id + 'd', DEVS, tot), [qr.id, tot]);
+  const os = useMemo(() => distribute(qr.id + 'o', OSS, tot), [qr.id, tot]);
+  const ctry = useMemo(() => { const m = {}; geo.forEach(g => { m[g.item[1]] = (m[g.item[1]] || 0) + g.count; }); return Object.keys(m).map(k => ({ label: COUNTRY[k], count: m[k] })).sort((a, b) => b.count - a.count); }, [geo]);
+  const [table, setTable] = useState(false);
+  if (qr.mode === 'static') return html`<div className="card pad"><div className="banner info"><${Icon} n="ScanLine" size=${16} />Este código é estático: o conteúdo está gravado nele e as leituras não passam pelo sistema. Crie um QR Code dinâmico para editar o destino.</div></div>`;
+  return html`<div className="grid gap-6">
+    <div className="flex flex-wrap items-center justify-between gap-3">
+      <${Tabs} label="Período" value=${range} onChange=${setRange} items=${[{ id: 7, label: '7 dias' }, { id: 30, label: '30 dias' }]} />
+      <span className="hint" style=${{ margin: 0 }}>Estatísticas simuladas para demonstração.</span>
+    </div>
+    <div className="grid gap-4 grid-cols-2 xl:grid-cols-4">
+      <${StatCard} icon="ScanLine" label="Scans no período" value=${fmt(tot)} />
+      <${StatCard} icon="BarChart3" label="Média por dia" value=${fmt(Math.round(tot / range))} />
+      <${StatCard} icon="Clock" label="Pico em um dia" value=${fmt(peak)} extra=${peak ? html`<span className="hint" style=${{ margin: 0 }}>${dayOf(pk, range).toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: 'short' })}</span>` : null} />
+      <${StatCard} icon="QrCode" label="Total desde a criação" value=${fmt(qr.totalScans)} />
+    </div>
+    <section className="card pad" aria-labelledby="h-time">
+      <div className="flex items-center justify-between gap-2 mb-2"><h2 id="h-time" style=${{ fontSize: 18 }}>Scans ao longo do tempo</h2><button type="button" className="btn btn-sm" onClick=${() => setTable(!table)}>${table ? 'Ver gráfico' : 'Ver como tabela'}</button></div>
+      ${table ? html`<div style=${{ overflowX: 'auto', maxHeight: 280 }}><table className="t"><thead><tr><th>Dia</th><th>Scans</th></tr></thead><tbody>${data.map((v, i) => html`<tr key=${i}><td>${dayOf(i, range).toLocaleDateString('pt-BR')}</td><td>${fmt(v)}</td></tr>`)}</tbody></table></div>`
+        : html`<${AreaChart} data=${data} label=${'Gráfico de scans por dia nos últimos ' + range + ' dias de ' + qr.name} />`}
+      ${!tot ? html`<div className="hint">Nenhum scan neste período ainda. Use "Simular leitura" na aba Destino para ver o gráfico reagir.</div>` : null}
+    </section>
+    <div className="grid gap-6 lg:grid-cols-3">
+      <section className="card pad" aria-labelledby="h-geo"><h2 id="h-geo" style=${{ fontSize: 16 }} className="mb-3">Localização aproximada</h2>
+        <div className="flex flex-wrap gap-2 mb-4">${ctry.slice(0, 3).map(c => html`<span key=${c.label} className="pill">${c.label} ${tot ? Math.round(c.count / tot * 100) : 0}%</span>`)}</div>
+        <${HBars} rows=${geo.slice(0, 6).map(g => ({ label: g.item[0], sub: g.item[1], count: g.count }))} empty="Sem dados no período." /></section>
+      <section className="card pad" aria-labelledby="h-dev"><h2 id="h-dev" style=${{ fontSize: 16 }} className="mb-3">Dispositivos</h2><${HBars} rows=${dev.map(g => ({ label: g.item[0], count: g.count }))} empty="Sem dados no período." /></section>
+      <section className="card pad" aria-labelledby="h-os"><h2 id="h-os" style=${{ fontSize: 16 }} className="mb-3">Sistemas operacionais</h2><${HBars} rows=${os.map(g => ({ label: g.item[0], count: g.count }))} empty="Sem dados no período." /></section>
+    </div>
+  </div>`;
+}
+
+function DestTab({ qr }) {
+  const app = useApp();
+  const [data, setData] = useState(qr.data);
+  const [name, setName] = useState(qr.name);
+  const [sim, setSim] = useState(null);
+  const err = validate(qr.type, data);
+  const changed = JSON.stringify(data) !== JSON.stringify(qr.data) || name.trim() !== qr.name;
+  const copy = async () => { try { await navigator.clipboard.writeText(shortUrl(qr.code)); app.notify('Link copiado'); } catch (e) { app.notify('Selecione o link e copie manualmente'); } };
+  if (qr.mode === 'static') return html`<div className="card pad grid gap-4"><div className="banner info"><${Icon} n="ScanLine" size=${16} />Este código é estático e carrega o conteúdo dentro dele. Para trocar o destino sem reimprimir, crie um QR Code dinâmico.</div>
+    <div><div className="eyebrow mb-1">Conteúdo gravado</div><div className="mono" style=${{ wordBreak: 'break-all', color: 'var(--muted)' }}>${payloadOf(qr.type, qr.data)}</div></div></div>`;
+  const save = () => {
+    const nd = { ...data }; if (qr.type === 'url') nd.url = normUrl(nd.url);
+    const hist = JSON.stringify(nd) !== JSON.stringify(qr.data) ? [{ at: Date.now(), text: 'Destino alterado para ' + destText({ ...qr, data: nd }) }] : [];
+    app.update(qr.id, { data: nd, name: name.trim() || qr.name, history: [...hist, ...qr.history] }, hist.length ? 'Destino atualizado. O código impresso continua o mesmo.' : 'Nome atualizado');
+  };
+  const simulate = () => {
+    if (!qr.active) { setSim({ code: '410', text: 'Código desativado: o visitante vê uma página de aviso e a leitura não é contada.' }); return; }
+    const sc = [...qr.scans30]; sc[29] += 1;
+    app.update(qr.id, { scans30: sc, totalScans: qr.totalScans + 1 });
+    setSim({ code: '302', text: qr.type === 'url' ? 'Redireciona para ' + normUrl(qr.data.url) : 'Abre a página hospedada com os dados de "' + destText(qr) + '".' });
+  };
+  return html`<div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px] items-start">
+    <section className="card pad grid gap-5 min-w-0" aria-labelledby="h-dest">
+      <div><h2 id="h-dest" style=${{ fontSize: 18 }}>Destino do QR Code</h2><p className="hint" style=${{ marginTop: 4 }}>Altere o conteúdo abaixo. O código impresso aponta para o link curto e passa a levar ao novo destino assim que você salvar.</p></div>
+      <${TextField} id="dest-name" label="Nome interno" value=${name} onChange=${setName} />
+      <${ContentForm} type=${qr.type} data=${data} onChange=${setData} idp="dest" />
+      ${err ? html`<div className="banner" role="status">${err}</div>` : null}
+      <div className="flex gap-2 flex-wrap"><button type="button" className="btn btn-primary" disabled=${!!err || !changed} onClick=${save}><${Icon} n="Check" size=${16} />Salvar novo destino</button>${changed ? html`<button type="button" className="btn" onClick=${() => { setData(qr.data); setName(qr.name); }}>Descartar</button>` : null}</div>
+    </section>
+    <div className="grid gap-6 min-w-0">
+      <section className="card pad grid gap-3" aria-labelledby="h-link">
+        <h2 id="h-link" style=${{ fontSize: 16 }}>Link curto fixo</h2>
+        <div className="mono" style=${{ wordBreak: 'break-all', padding: '10px 12px', borderRadius: 10, background: 'var(--surface2)', border: '1px solid var(--line)' }}>${shortUrl(qr.code)}</div>
+        <div className="flex gap-2 flex-wrap"><button type="button" className="btn btn-sm" onClick=${copy}><${Icon} n="Copy" size=${15} />Copiar link</button></div>
+        ${sim ? html`<div className=${cx('banner', sim.code === '302' ? 'info' : '')} role="status"><span className="mono" style=${{ fontWeight: 700 }}>${sim.code}</span><span>${sim.text}</span></div>` : null}
+        <div className="flex items-center justify-between gap-3"><span className="font-semibold">Código ativo</span><${Switch} on=${qr.active} onChange=${v => app.update(qr.id, { active: v }, v ? 'QR Code ativado' : 'QR Code desativado')} label="Código ativo" /></div>
+      </section>
+      <section className="card pad" aria-labelledby="h-hist"><h2 id="h-hist" style=${{ fontSize: 16 }} className="mb-3">Histórico de alterações</h2>
+        <ul style=${{ listStyle: 'none', margin: 0, padding: 0, display: 'grid', gap: 10 }}>${qr.history.slice(0, 6).map((h, i) => html`<li key=${i} className="flex gap-3"><span style=${{ color: 'var(--faint)', minWidth: 92, fontSize: 12.5 }}>${relTime(h.at)}</span><span style=${{ minWidth: 0 }}>${h.text}</span></li>`)}</ul></section>
+    </div>
+  </div>`;
+}
+function StyleTab({ qr }) {
+  const app = useApp();
+  const [draft, setDraft] = useState({ ...qr });
+  return html`<div className="grid gap-4">
+    <div className="banner info"><${Icon} n="ScanLine" size=${16} />Mudar o visual troca só a imagem do código. O link curto gravado nele é o mesmo, então o material já impresso continua funcionando.</div>
+    <${Studio} draft=${draft} setDraft=${setDraft} mode="style" submitLabel="Salvar aparência" onSubmit=${() => app.update(qr.id, { style: draft.style }, 'Aparência salva')} />
+  </div>`;
+}
+function Detail({ id, tab }) {
+  const app = useApp(), qr = app.qrs.find(q => q.id === id);
+  const [ask, setAsk] = useState(false);
+  if (!qr) return html`<div className="card pad">Este QR Code não existe mais. <button type="button" className="btn btn-sm" onClick=${() => app.go({ page: 'list' })}>Voltar à lista</button></div>`;
+  const tabs = [{ id: 'dest', label: 'Destino', icon: 'Link2' }, { id: 'style', label: 'Aparência', icon: 'Palette' }];
+  return html`<div>
+    <button type="button" className="btn btn-sm mb-4" onClick=${() => app.go({ page: 'list' })}><${Icon} n="ArrowLeft" size=${15} />Meus QR Codes</button>
+    <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+      <div className="flex items-center gap-4" style=${{ minWidth: 0 }}><${QRThumb} qr=${qr} size=${64} /><div style=${{ minWidth: 0 }}><h1 style=${{ fontSize: 26, lineHeight: 1.15 }}>${qr.name}</h1><div className="flex flex-wrap items-center gap-2 mt-2"><${TypePill} qr=${qr} /><${StatusPill} active=${qr.active} /><span className="mono" style=${{ color: 'var(--faint)', fontSize: 12 }}>${qr.mode === 'dynamic' ? '/qr/' + qr.code : ''}</span></div></div></div>
+      <div className="flex gap-2 items-center">${ask ? html`<span style=${{ color: 'var(--crit)', fontWeight: 600 }}>Excluir este código?</span><button type="button" className="btn btn-danger" onClick=${() => app.remove(qr.id)}>Excluir</button><button type="button" className="btn" onClick=${() => setAsk(false)}>Cancelar</button>` : html`<button type="button" className="btn btn-danger" onClick=${() => setAsk(true)}><${Icon} n="Trash2" size=${16} />Excluir</button>`}</div>
+    </div>
+    <div className="mb-6"><${Tabs} items=${tabs} value=${tab} onChange=${t => app.go({ page: 'detail', id, tab: t })} label="Seções do QR Code" /></div>
+    ${tab === 'stats' ? html`<${StatsTab} key=${qr.id} qr=${qr} />` : tab === 'dest' ? html`<${DestTab} key=${qr.id} qr=${qr} />` : html`<${StyleTab} key=${qr.id} qr=${qr} />`}
+  </div>`;
+}
+
+/* ---------- aplicativo ---------- */
+function Logo() {
+  return html`<svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true"><rect x="0" y="0" width="26" height="26" rx="7" fill="var(--accent)" />${[[6, 6], [13, 6], [6, 13], [13, 13], [19, 19]].map((p, i) => html`<circle key=${i} cx=${p[0] + 1.5} cy=${p[1] + 1.5} r=${i === 4 ? 2 : 2.6} fill="var(--accent-ink)" />`)}</svg>`;
+}
+function effectiveTheme() { const t = document.documentElement.getAttribute('data-theme'); return t || (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'); }
+function App() {
+  const [route, setRoute] = useState({ page: 'home' });
+  const [qrs, setQrs] = useState([]);
+  const [loading, setLoading] = useState(true);
+  useEffect(() => { serverApi('/api/config').then(c => { if(c.baseUrl) DOMAIN = c.baseUrl; return serverApi('/api/qrs'); }).then(items => setQrs(items)).catch(e => { console.error(e); alert('Falha ao carregar QR Codes: ' + e.message); }).finally(() => setLoading(false)); }, []);
+  const [msg, setMsg] = useState('');
+  const [dl, setDl] = useState(null);
+  const [theme, setTheme] = useState(effectiveTheme);
+  const tm = useRef(0);
+  useEffect(() => { try { const t = localStorage.getItem('pontilha-tema'); if (t === 'dark' || t === 'light') { document.documentElement.setAttribute('data-theme', t); setTheme(t); } } catch (e) {} }, []);
+  useEffect(() => { let off = false; if (window.claude && window.claude.use) window.claude.use('downloads').then(d => { if (!off) setDl(d); }).catch(() => {}); return () => { off = true; }; }, []);
+  const notify = m => { setMsg(m); clearTimeout(tm.current); tm.current = setTimeout(() => setMsg(''), 2600); };
+  const go = r => { setRoute(r); window.scrollTo(0, 0); };
+  const flipTheme = () => { const n = theme === 'dark' ? 'light' : 'dark'; document.documentElement.setAttribute('data-theme', n); setTheme(n); try { localStorage.setItem('pontilha-tema', n); } catch (e) {} };
+  const saveQR = async q => { await serverApi('/api/qrs', { method:'POST',body:JSON.stringify(q) }); setQrs(l => [q,...l]); };
+  const api = {
+    qrs, dl, notify, go,
+    add: async q => { try { await saveQR(q); notify('QR Code criado'); go({page:'detail',id:q.id,tab:q.mode==='dynamic'?'dest':'style'}); } catch(e){notify('Erro: '+e.message);} },
+    update: async (id,p,m) => { const old=qrs.find(q=>q.id===id); if(!old)return; const next={...old,...p}; try{await serverApi('/api/qrs/'+encodeURIComponent(old.code),{method:'PUT',body:JSON.stringify(next)});setQrs(l=>l.map(q=>q.id===id?next:q));if(m)notify(m);}catch(e){notify('Erro: '+e.message);} },
+    remove: async id => {const old=qrs.find(q=>q.id===id);if(!old)return;try{await serverApi('/api/qrs/'+encodeURIComponent(old.code),{method:'DELETE'});setQrs(l=>l.filter(q=>q.id!==id));notify('QR Code excluído');if(route.page==='detail')go({page:'list'});}catch(e){notify('Erro: '+e.message);} },
+    duplicate: async id => {const q=qrs.find(x=>x.id===id);if(!q)return;const code=newCode();const copy={...q,id:'q'+code,code,name:q.name+' (cópia)',createdAt:Date.now(),scans30:Array(30).fill(0),totalScans:0,history:[{at:Date.now(),text:'Criado a partir de '+q.name}]};try{await saveQR(copy);notify('QR Code duplicado');}catch(e){notify('Erro: '+e.message);} }
+  };
+  const nav = [{ id: 'home', label: 'Visão geral', icon: 'LayoutDashboard' }, { id: 'list', label: 'Meus QR Codes', icon: 'QrCode' }, { id: 'create', label: 'Criar QR Code', icon: 'Plus' }];
+  const cur = route.page === 'detail' ? 'list' : route.page;
+  const NavBtns = html`${nav.map(n => html`<button key=${n.id} type="button" className="navbtn" aria-current=${cur === n.id ? 'page' : undefined} onClick=${() => go({ page: n.id })}><${Icon} n=${n.icon} size=${19} />${n.label}</button>`)}`;
+  return html`<${Ctx.Provider} value=${api}>
+    <div className="shell">
+      <aside className="side">
+        <div className="brand"><${Logo} />Pontilha</div>
+        <nav aria-label="Principal" className="grid gap-1">${NavBtns}</nav>
+        <div style=${{ marginTop: 'auto' }} className="grid gap-3">
+          <button type="button" className="navbtn" onClick=${flipTheme}><${Icon} n=${theme === 'dark' ? 'Sun' : 'Moon'} size=${19} />${theme === 'dark' ? 'Tema claro' : 'Tema escuro'}</button>
+          <p className="hint" style=${{ margin: 0, padding: '0 4px' }}>Dados salvos no servidor. Os QR Codes dinâmicos dependem do serviço estar online.</p>
+        </div>
+      </aside>
+      <main className="main">
+        <div className="flex items-center justify-between lg:hidden mb-5"><div className="brand"><${Logo} />Pontilha</div><button type="button" className="iconbtn" onClick=${flipTheme} aria-label="Alternar tema"><${Icon} n=${theme === 'dark' ? 'Sun' : 'Moon'} size=${20} /></button></div>
+        ${loading ? html`<div className="card pad">Carregando QR Codes...</div>` : route.page === 'home' ? html`<${Home} />` : route.page === 'list' ? html`<${ListPage} />` : route.page === 'create' ? html`<${CreatePage} key="create" />` : html`<${Detail} id=${route.id} tab=${route.tab || 'stats'} />`}
+      </main>
+    </div>
+    <nav className="bottomnav" aria-label="Principal">${NavBtns}</nav>
+    <div aria-live="polite">${msg ? html`<div className="toast" role="status">${msg}</div>` : null}</div>
+  <//>`;
+}
+ReactDOM.createRoot(document.getElementById('root')).render(html`<${App} />`);
+})();
+</script>
+
+</body></html>
