@@ -193,7 +193,7 @@ const emptyData = () => ({
   wifi: { ssid: '', pass: '', enc: 'WPA' }, email: { to: '', subject: '', body: '' },
   sms: { phone: '', msg: '' }, pix: { key: '', name: '', city: '', amount: '', txid: '' }
 });
-const defaultMode = t => (t === 'url' || t === 'text' || t === 'vcard') ? 'dynamic' : 'static';
+const defaultMode = t => 'static';
 const normUrl = u => { u = (u || '').trim(); return u && !/^https?:\/\//i.test(u) ? 'https://' + u : u; };
 function wesc(s) { return String(s || '').replace(/([\\;,:"])/g, '\\$1'); }
 function tlv(id, v) { return id + String(v.length).padStart(2, '0') + v; }
