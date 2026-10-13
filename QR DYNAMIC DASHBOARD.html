@@ -249,8 +249,7 @@ function destText(q) {
 }
 const shortUrl = code => 'https://' + DOMAIN + '/qr/' + code;
 const curData = q => q.datas ? q.datas[q.type] : q.data;
-const encodedOf = q => q.mode === 'dynamic' ? shortUrl(q.code) : (payloadOf(q.type, curData(q)) || 'https://' + DOMAIN);
-
+const encodedOf = q => payloadOf(q.type, curData(q)) || '';
 /* ---------- geração do QR ---------- */
 qrcode.stringToBytes = s => Array.from(new TextEncoder().encode(s));
 function getMatrix(text, ecl) {
