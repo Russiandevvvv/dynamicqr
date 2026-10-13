@@ -1,0 +1,38 @@
+PONTILHA - QR CODES DINÂMICOS (VERSÃO INICIAL)
+
+O QUE ESTÁ PRONTO
+- Seu dashboard original, com gerador de QR, cores, logotipos e downloads.
+- QR dinâmico de URL com link fixo /r/CODIGO, editável no painel.
+- QR estático para PIX, Wi-Fi, texto, cartão de visita, e-mail e SMS.
+- Criação, edição, duplicação e exclusão no PostgreSQL.
+- Painel protegido por senha HTTP Basic; redirecionamentos públicos.
+
+PUBLICAÇÃO NO RENDER
+1. Extraia o ZIP e envie TODOS os arquivos para um novo repositório privado no GitHub.
+2. Crie um banco PostgreSQL persistente (Render Postgres ou outro provedor).
+3. Crie um Web Service Node no Render ligado ao repositório.
+   Build command: npm install
+   Start command: npm start
+4. Adicione variáveis de ambiente:
+   DATABASE_URL = URL de conexão PostgreSQL fornecida pelo provedor
+   ADMIN_PASSWORD = senha longa e exclusiva para acessar o painel
+   PUBLIC_BASE_URL = URL pública HTTPS do seu Web Service, ex. https://meuqr.onrender.com
+5. Publique. Ao abrir a URL, o navegador pedirá usuário e senha.
+   Usuário: admin (ou qualquer texto); senha: ADMIN_PASSWORD.
+6. Crie um QR tipo URL, modo DINÂMICO. Baixe a imagem, teste /r/CODIGO.
+7. Edite o destino na aba Destino e confirme que o mesmo QR abre o novo link.
+
+ATENÇÃO
+- Não use o arquivo HTML pelo file://: o painel agora requer servidor e banco.
+- Não exponha DATABASE_URL ou ADMIN_PASSWORD no GitHub.
+- Use banco persistente e faça backups; NÃO use arquivo local ou banco efêmero.
+- Os QR já criados anteriormente no navegador NÃO são importados automaticamente.
+- O link fixo depende de PUBLIC_BASE_URL. Configure domínio próprio antes de imprimir/vender,
+  pois mudar o domínio depois invalida os QR Codes já impressos.
+- No Render gratuito, o serviço pode dormir e o primeiro acesso pode demorar;
+  planos e disponibilidade de banco devem ser conferidos com o provedor.
+- Não há limite de 25 QR Codes imposto pelo software, mas há limites de infraestrutura.
+- Esta versão NÃO coleta estatísticas reais; a tela antiga de estatísticas é demonstrativa.
+- QR dinâmico de URL funciona. Outros tipos continuam estáticos, para preservar PIX/Wi-Fi.
+- Para produção comercial, recomendam-se autenticação com sessões, backups automáticos,
+  monitoramento, política de retenção e proteção contra abuso.
