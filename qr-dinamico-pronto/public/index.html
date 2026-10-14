@@ -139,7 +139,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/htm@3.1.1/dist/htm.umd.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/lucide-react@0.468.0/dist/umd/lucide-react.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 <script>
@@ -156,9 +155,28 @@ const fmt = n => Number(n || 0).toLocaleString('pt-BR');
 
 /* ---------- ícones ---------- */
 function Icon({ n, size = 18, sw = 1.75, className }) {
-  const C = L[n];
-  if (!C) return html`<span className=${className} style=${{ display: 'inline-block', width: size, height: size }} aria-hidden="true"></span>`;
-  return html`<${C} size=${size} strokeWidth=${sw} className=${className} aria-hidden="true" />`;
+  const simbolos = {
+    Trash2: "🗑️",
+    Pencil: "✏️",
+    Copy: "📋",
+    BarChart3: "📊",
+    Download: "⬇️",
+    Eye: "👁️",
+    Plus: "＋"
+  };
+
+  return html`<span
+    className=${className || ""}
+    style=${{
+      display: "inline-flex",
+      alignItems: "center",
+      justifyContent: "center",
+      width: size,
+      height: size,
+      fontSize: size * 0.9
+    }}
+    aria-hidden="true"
+  >${simbolos[n] || "●"}</span>`;
 }
 
 /* ---------- utilidades ---------- */
