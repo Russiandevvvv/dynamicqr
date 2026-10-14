@@ -35,8 +35,10 @@ function auth(event) {
 }
 exports.handler = async event => {
   const qs = event.queryStringParameters || {};
-  const kind = qs.kind;
-  const code = qs.code;
+  const path = (event.path || '').split('?')[0];
+  const match = path.match(/\/(?:api\/qrs|r|redirect|item)\/([^/]+)$/);
+  const code = qs.code || (match ? decodeURIComponent(match[1]) : undefined);
+  const kind = qs.kind || ((/\/(?:r|redirect)\/[^/]+$/.test(path)) ? 'redirect' : /\/(?:api\/config|config)$/.test(path) ? 'config' : /\/(?:api\/qrs|list)$/.test(path) ? 'qrs' : /\/(?:api\/qrs|item)\/[^/]+$/.test(path) ? 'qr' : undefined);
   const method = event.httpMethod;
   try {
     if (kind === 'redirect') {
